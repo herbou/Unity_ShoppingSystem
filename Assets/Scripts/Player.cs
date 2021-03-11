@@ -1,65 +1,94 @@
-﻿using UnityEngine;
-using TMPro;
+﻿using UnityEngine ;
+using TMPro ;
 
-public class Player : MonoBehaviour
-{
-	[SerializeField] SpriteRenderer playerImage;
-	[SerializeField] TMP_Text playerNameText;
+public class Player : MonoBehaviour {
+   /*[old code]
+   [SerializeField] SpriteRenderer playerImage ;
+   */
+   [SerializeField] GameObject[] skins ;
+   [SerializeField] TMP_Text playerNameText ;
 
-	public float speed = 1f;
+   public float speed = 1f ;
 
-	Rigidbody2D rb;
-	bool isMoving = false;
-	float x, y;
+   Rigidbody2D rb ;
+   bool isMoving = false ;
+   float x, y ;
 
-	void Start ()
-	{
-		rb = GetComponent<Rigidbody2D> ();
+   void Start () {
+      rb = GetComponent<Rigidbody2D> () ;
 
-		ChangePlayerSkin ();
-	}
+      ChangePlayerSkin () ;
+   }
 
-	void ChangePlayerSkin ()
-	{
-		Character character = GameDataManager.GetSelectedCharacter ();
-		if (character.image != null) {
-			playerImage.sprite = character.image;
-			playerNameText.text = character.name;
-		}
-	}
+   void ChangePlayerSkin () {
+      Character character = GameDataManager.GetSelectedCharacter () ;
+      if (character.image != null) {
+      	 /*[old code]
+         playerImage.sprite = character.image ;
+         */
 
-	void Update ()
-	{
-		x = Input.GetAxis ("Horizontal");
-		y = Input.GetAxis ("Vertical");
+         // Get selected character's index:
+         int selectedSkin = GameDataManager.GetSelectedCharacterIndex () ;
 
-		isMoving = (x != 0f || y != 0f);
-	}
+         // show selected skin's gameobject:
+         skins [ selectedSkin ].SetActive (true) ;
 
-	void FixedUpdate ()
-	{
-		if (isMoving) {
-			rb.position += new Vector2 (x, y) * speed * Time.fixedDeltaTime;
-		}
-	}
+         // hide other skins (except selectedSkin) :
+         for (int i = 0; i < skins.Length; i++)
+            if (i != selectedSkin)
+               skins [ i ].SetActive (false) ;
 
-	void OnCollisionEnter2D (Collision2D other)
-	{
-		string tag = other.collider.tag;
 
-		if (tag.Equals ("coin")) {
-			//Add Coins 
-			GameDataManager.AddCoins (32);
+         playerNameText.text = character.name ;
+      }
+   }
 
-			// Cheating (while moving hold key "C" to get extra coins) 
-			#if UNITY_EDITOR
-			if (Input.GetKey (KeyCode.C))
-				GameDataManager.AddCoins (179);
-			#endif
+   void Update () {
+      #if UNITY_EDITOR
+      if (!Input.GetKey (KeyCode.M)) {
+         if (Input.GetKey (KeyCode.LeftArrow) || Input.GetKey (KeyCode.RightArrow) || Input.GetKey (KeyCode.UpArrow) || Input.GetKey (KeyCode.DownArrow)) {
+            x = Input.GetAxis ("Horizontal") ;
+            y = Input.GetAxis ("Vertical") ;
 
-			GameSharedUI.Instance.UpdateCoinsUIText ();
+         } else
+            x = y = 0f ;
+      }
+      #endif
 
-			Destroy (other.gameObject);
-		}
-	}
+      isMoving = (x != 0f || y != 0f) ;
+   }
+
+   public void MoveHorizontally (float value) {
+      x = value ;
+   }
+
+   public void MoveVertically (float value) {
+      y = value ;
+   }
+
+   void FixedUpdate () {
+      if (isMoving) {
+         rb.position += new Vector2 (x, y) * speed * Time.fixedDeltaTime ;
+      }
+   }
+
+
+   void OnCollisionEnter2D (Collision2D other) {
+      string tag = other.collider.tag ;
+
+      if (tag.Equals ("coin")) {
+         //Add Coins 
+         GameDataManager.AddCoins (32) ;
+
+         // Cheating (while moving hold key "C" to get extra coins) 
+         #if UNITY_EDITOR
+         if (Input.GetKey (KeyCode.C))
+            GameDataManager.AddCoins (179) ;
+         #endif
+
+         GameSharedUI.Instance.UpdateCoinsUIText () ;
+
+         Destroy (other.gameObject) ;
+      }
+   }
 }
